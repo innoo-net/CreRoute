@@ -42,5 +42,6 @@ export class AppLayout extends LitElement {
     `
   }
 }
-
-customElements.define('app-layout', AppLayout)
+if (!customElements.get('app-layout')) {
+  customElements.define('app-layout', AppLayout)
+}
