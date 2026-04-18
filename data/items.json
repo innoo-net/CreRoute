@@ -1,0 +1,10 @@
+[
+  {
+    "title": "お知らせ1",
+    "description": "GitHub Pages上でJSONを表示するサンプルです。"
+  },
+  {
+    "title": "お知らせ2",
+    "description": "静的HTMLだけで動きます。"
+  }
+]

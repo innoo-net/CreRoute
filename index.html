@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ja">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>JSON表示サンプル</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            max-width: 720px;
+            margin: 40px auto;
+            padding: 0 16px;
+            line-height: 1.7;
+        }
+
+        h1 {
+            margin-bottom: 24px;
+        }
+
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        .error {
+            color: #b00020;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>JSONの内容を表示</h1>
+    <div id="app">読み込み中...</div>
+
+    <script>
+        async function loadJson() {
+            const app = document.getElementById("app");
+
+            try {
+                const res = await fetch("./data/items.json");
+                if (!res.ok) {
+                    throw new Error(`HTTP ${res.status}`);
+                }
+
+                const items = await res.json();
+
+                if (!Array.isArray(items)) {
+                    app.innerHTML = '<p class="error">JSONは配列で用意してください。</p>';
+                    return;
+                }
+
+                app.innerHTML = items.map(item => `
+          <div class="card">
+            <h2>${escapeHtml(item.title ?? "タイトルなし")}</h2>
+            <p>${escapeHtml(item.description ?? "")}</p>
+          </div>
+        `).join("");
+            } catch (err) {
+                app.innerHTML = `<p class="error">読み込み失敗: ${escapeHtml(err.message)}</p>`;
+            }
+        }
+
+        function escapeHtml(str) {
+            return String(str)
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;")
+                .replaceAll("'", "&#39;");
+        }
+
+        loadJson();
+    </script>
+</body>
+
+</html>
