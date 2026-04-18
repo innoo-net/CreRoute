@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rete.js on static HTML</title>
+    <style>
+        html,
+        body {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: sans-serif;
+        }
+
+        #rete {
+            width: 100vw;
+            height: 100vh;
+            background: #f6f7fb;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="rete"></div>
+
+    <script type="module">
+        import { NodeEditor, ClassicPreset } from "https://esm.sh/rete";
+        import { AreaPlugin, AreaExtensions } from "https://esm.sh/rete-area-plugin";
+        import { ConnectionPlugin, Presets as ConnectionPresets } from "https://esm.sh/rete-connection-plugin";
+        import { LitPlugin, Presets as LitPresets } from "https://esm.sh/@retejs/lit-plugin";
+        import "https://esm.sh/lit";
+
+        const container = document.getElementById("rete");
+
+        const socket = new ClassicPreset.Socket("socket");
+
+        class NumberNode extends ClassicPreset.Node {
+            constructor(label) {
+                super(label);
+                this.addOutput("value", new ClassicPreset.Output(socket, "Value"));
+            }
+        }
+
+        class SumNode extends ClassicPreset.Node {
+            constructor() {
+                super("Sum");
+                this.addInput("a", new ClassicPreset.Input(socket, "A"));
+                this.addInput("b", new ClassicPreset.Input(socket, "B"));
+                this.addOutput("value", new ClassicPreset.Output(socket, "Result"));
+            }
+        }
+
+        async function createEditor() {
+            const editor = new NodeEditor();
+
+            const area = new AreaPlugin(container);
+            const connection = new ConnectionPlugin();
+            const render = new LitPlugin();
+
+            render.addPreset(LitPresets.classic.setup());
+            connection.addPreset(ConnectionPresets.classic.setup());
+
+            editor.use(area);
+            area.use(connection);
+            area.use(render);
+
+            AreaExtensions.simpleNodesOrder(area);
+            AreaExtensions.selectableNodes(area, AreaExtensions.selector(), {
+                accumulating: AreaExtensions.accumulateOnCtrl()
+            });
+
+            const n1 = new NumberNode("Number 1");
+            const n2 = new NumberNode("Number 2");
+            const sum = new SumNode();
+
+            await editor.addNode(n1);
+            await editor.addNode(n2);
+            await editor.addNode(sum);
+
+            await area.translate(n1.id, { x: 80, y: 120 });
+            await area.translate(n2.id, { x: 80, y: 320 });
+            await area.translate(sum.id, { x: 420, y: 220 });
+
+            await editor.addConnection(new ClassicPreset.Connection(n1, "value", sum, "a"));
+            await editor.addConnection(new ClassicPreset.Connection(n2, "value", sum, "b"));
+
+            AreaExtensions.zoomAt(area, editor.getNodes());
+        }
+
+        createEditor().catch(console.error);
+    </script>
+</body>
+
+</html>
